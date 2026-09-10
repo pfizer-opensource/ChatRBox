@@ -1,0 +1,42 @@
+---
+title: "AI Prompting"
+output: rmarkdown::html_vignette
+---
+
+The default ChatRBox prompt (`prompt.md` in `inst/prompt`) is centered around service implementation, interpolating `{paths_string}`, `{args_string}` and `{past_outputs}` with `glue`. Users may personalize AI instruction by updating `prompt_template` using `ChatRBox_update()`or altering the default `prompt.md` file. In the former method, `prompt_template` may be set as a character string or a path to a Markdown file using `load_prompt_md()`. The default `prompt.md` file is utilized in the absence of the `prompt_template` argument during chatbot initialization.
+
+<br>
+
+### ChatRBox_update() Method
+
+`data_list`, `services_list` and `tools_list` default to empty lists in `ChatRBox_update()`, whereas `tools_env`, `data_env`, `object_env`, `config_env` and `prompt_template` default to the existing `S7` object properties. Therefore, unlike adding tool functions or data frames, updating `prompt_template` removes the previous AI prompt. 
+
+Here, we use `prompt_template` to limit the methods by which `session` can respond to user inputs, without reference to `{paths_string}`, `{args_string}` or `{past_outputs}`.
+
+```{r, eval=FALSE}
+ChatRBox_update(object = session, prompt_template = "Don't include the letter 'E' in your responses") 
+```
+
+We test this update using `$talk()` and a factual recall question.
+
+```{r, eval=FALSE}
+session$talk("Who was the first president of the USA?") 
+```
+
+<br>
+
+### Loading Markdown Files as Prompts
+
+The prompt may also be constructed outside of the `ChatRBox_update()` function call, within a local Markdown file. This allows more detailed and verbose prompting, alongside simplified editing. Users may load their Markdown files using `load_prompt_md()` which takes only the file path as an argument. This path should be a character string and may be absolute or relative to the user working directory. The example below demonstrates this using the path to the default prompt relative to the ChatRBox repository, which finishes with the name of the Markdown file and `.md` suffix. 
+
+```{r, eval=FALSE}
+ChatRBox_update(object = session, prompt_template = load_prompt_md("inst/prompt/prompt.md")) 
+```
+
+<br>
+
+### Default Prompt Method
+
+Any use case-specific information may be added to the existing `prompt.md` file, without removing its current contents. The package prompt instructs AI chatbots to output a JSON object including necessary service paths and arguments to fulfill an API call using downloaded client functions. Therefore, subsequent workflows involving JSON object parsing become obsolete if these instructions are removed. This is also true for prompts provided as Markdown files using `load_prompt_md()`, whereby users are advised to maintain the default prompt at the top of these scripts.  
+
+Notably, the default prompt utilizes the `glue` package and `glue` notation, with interpolated R code encapsulated by braces ({ }). To avoid error during prompt installation, users should reserve single brace usage for `glue` interpolation. If users wish to include braces in their prompt for other reasons, these should be replaced with double braces ({{ }}). 

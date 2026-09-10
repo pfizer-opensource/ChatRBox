@@ -1,0 +1,140 @@
+---
+title: "Setting Up Your AI Provider"
+output: rmarkdown::html_vignette
+---
+
+Given the influence of `ellmer`, ChatRBox has been designed to complement this R package, whereby any `ellmer` AI provider (Ollama, OpenAI, vLLM...) may be utilized. Here, we demonstrate setting up the public Ollama provider via three methods.
+
+<br>
+
+### Setting Up Using Character Base URLs
+
+Firstly, the Ollama API URL may be passed as a string to the `base_url` argument in the `ellmer` `chat` function. All `chat_ollama()` arguments have been presented here for completeness.
+
+```{r, eval=FALSE}
+library(ellmer)
+
+chat_ollama(
+  system_prompt = NULL,
+  base_url = "http://localhost:11434",
+  model = "mistral",
+  credentials = NULL,
+  params = NULL,
+  api_args = list(),
+  echo = NULL,
+  api_key = NULL,
+  api_headers = character()
+)
+```
+
+<br>
+
+### Setting Up Using Environment Variables
+
+Secondly, this may be facilitated via an environment variable stored in users' `.Renviron` files. Here, we assign the Ollama API base URL to the variable `OLLAMA_HOST`. This method is advantageous for security, given sensitive API keys.
+
+```{r, eval=FALSE}
+library(ellmer)
+
+chat_ollama(
+  system_prompt = NULL,
+  base_url = Sys.getenv("OLLAMA_HOST"),
+  model = "mistral",
+  credentials = NULL,
+  params = NULL,
+  api_args = list(),
+  echo = NULL,
+  api_key = NULL,
+  api_headers = character()
+)
+```
+
+<br>
+
+### Setting Up Using the Keyring Package 
+
+Finally, there are two ChatRBox functions that allow secure AI set up using the `keyring` package: `store_keyring()` and `get_keyring()`. Here, we assign the Ollama API base URL to the variable `OLLAMA_HOST` within a YAML config file named `ChatRBox_config.yml`. It is assumed that this config file is kept in the home directory. Note that environment variables are stored using the `env` backend, leading to a harmless warning message.
+
+```{r, eval=FALSE}
+store_keyring(config_path = "~/ChatRBox_config.yml")
+```
+
+Then, we set up the Ollama AI provider just as before, except that `base_url` is assigned using `get_keyring()`. This is analogous to `Sys.getenv("VARIABLE_NAME")`.  
+
+```{r, eval=FALSE}
+library(ellmer)
+
+chat_ollama(
+  system_prompt = NULL,
+  base_url = get_keyring("OLLAMA_HOST"),
+  model = "mistral",
+  credentials = NULL,
+  params = NULL,
+  api_args = list(),
+  echo = NULL,
+  api_key = NULL,
+  api_headers = character()
+)
+```
+
+The article `Providing API Services` demonstrates providing remote APIs to chatbots using a local API service contained in `inst/api_service`. This involves the function `start_api_service()`, which runs a background R process using the `callr` function `r_bg()`. This process temporarily copies user `.Renviron` files, meaning users may favor the `keyring` method to set up their AI provider.
+
+Note that only the name of the Ollama base URL has been inputted into the `get_keyring()` function, indicative of a non-nested YAML config file with the following structure. The public Ollama base URL has been listed.
+
+```{r, eval=FALSE}
+# Non-nested config file structure
+
+OLLAMA_HOST: "http://localhost:11434"
+```
+
+However, `get_keyring()` also facilitates variable extraction from nested YAML config files.  
+
+In order to pass the Ollama base URL during chatbot initialization, the `base_url` argument should take the value `get_keyring("OLLAMA.base_url")`, whereby the header and environment variable name are separated by a `.`.
+
+```{r, eval=FALSE}
+# Nested config file structure
+
+OLLAMA: 
+ base_url: "http://localhost:11434"
+```
+
+<br>
+
+### Chatbot Initialization
+
+This `chat_` function may be used as the `ai_provider` argument during chatbot initialization. Here, we initialize a chatbot named `ollama` and provide the `base_url` and `model` arguments to `ChatRBox$new()`. The inclusion of `model` is specific to `chat_ollama()`; other `ellmer` `chat_` functions may require more additional arguments.
+
+As documented above, `base_url` and `model` may be passed as character strings, environment variables or using `get_keyring()`. The initialization below will check for environment variables named `OLLAMA_HOST` and `OLLAMA_MODEL`, falling back to string assignments if not present.
+
+Chatbots may be interacted with by name, followed by `$talk()` and string inputs. This chatbot has not been given access to any API services, R tool functions or data frames, meaning the question is general and factual recall. 
+
+```{r, eval=FALSE}
+ollama <- ChatRBox$new(ai_provider = ellmer::chat_ollama, 
+                        base_url = Sys.getenv("OLLAMA_HOST", unset = "http://localhost:11434"),
+                        model = Sys.getenv("OLLAMA_MODEL", unset = "mistral"))
+
+ollama$talk("Who is credited for the Theory of Relativity?")
+```
+
+<br>
+
+### Setting Up Other Ellmer AI Providers
+
+The three methods demonstrated above concern the Ollama AI provider from `ellmer`, but as mentioned, any `ellmer` `chat_` function is compatible with ChatRBox. Every `chat_` function has its own set of required parameters, authentication methods and arguments that must be present during chatbot initialization as well as AI provider set-up. For example, the Ollama provider includes nine parameters during set-up but only `base_url` and `model` must be passed to `ChatRBox$new()` during initialization. Please also refer to `ellmer` documentation on the desired AI provider for details on pre-requisite requirements. 
+
+<br>
+
+### Common Issues During Set Up
+
+Whilst the ChatRBox R package was designed to be simple and easy to use for coders of all programming abilities, AI provider set-up can be complicated due to the vast amount of compatible providers. Therefore, this section documents some common pitfalls that users have experienced and should be referred to during set-up. 
+
+If you are experiencing issues and have not found solutions from this page, please email the package maintainer. Reported issues will be added to the list below, meaning your contributions can make ChatRBox run smoothly for other users too! 
+
+This list is ongoing and was last updated on April 12th 2026.
+
+### REPORTED FOR CHAT_VLLM
+* Error messages warning that `OPEN_API_KEY` (or similar) variables have not been provided may be avoided by providing dummy assignments, as demonstrated below.
+
+```{r, eval=FALSE}
+Sys.setenv(OPENAI_API_KEY = "dummy")
+```

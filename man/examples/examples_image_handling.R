@@ -1,0 +1,42 @@
+# Generated client functions output bytes rather than rendering images, 
+# This centralizes image rendering within the ChatRBox workflow
+
+# Hence, client function outputs are checked for 'render-able' formats
+
+# Example output formats
+png_bytes <- as.raw(c(0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A))
+jpeg_bytes <- as.raw(c(0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10))
+non_image_bytes <- as.raw(c(0x01, 0x02, 0x03, 0x04))
+
+# Returns TRUE if 'render-able' bytes
+is_image_bytes(png_bytes)
+is_image_bytes(jpeg_bytes)
+is_image_bytes(non_image_bytes)
+
+# Identifies image types for rendering
+image_bytes_format(png_bytes)
+image_bytes_format(jpeg_bytes)
+image_bytes_format(non_image_bytes)
+
+# Example image arrays
+rgb_array <- array(runif(12), dim = c(2, 2, 3))
+rgba_array <- array(runif(16), dim = c(2, 2, 4))
+non_image_array <- matrix(1:6, nrow = 2, ncol = 3)
+
+# Checks if stored arrays are 'render-able'
+is_image_array(rgb_array)
+is_image_array(rgba_array)
+is_image_array(non_image_array)
+
+# Example image result types
+image_result <- png_bytes
+binary_result <- as.raw(c(0x01, 0x02, 0x03))
+
+# Placeholders for non-graphics R console per result type
+format_api_result_for_display(image_result)
+format_api_result_for_display(image_result, rendered_image = TRUE)
+
+format_api_result_for_display(binary_result)
+
+# Note that the render_api_image() function constructs image outputs but 
+# requires actual image data and graphics device

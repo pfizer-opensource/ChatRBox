@@ -1,0 +1,58 @@
+---
+title: "API/Tool Output Memory"
+output: rmarkdown::html_vignette
+---
+
+### Interpolating AI Responses into Chatbot Memory
+
+To demonstrate chatbot memory, we define a tool function to return the `example_data` data set. We pass this tool to `session` using `ChatRBox_update()`.
+
+```{r, eval=FALSE}
+return_data <- function(){
+ example_data <- data.frame(
+  X = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10),
+  Y = c(10, 13, 15, 18, 21, 20, 23, 27, 28, 30)
+)
+ return(example_data)
+}
+
+ChatRBox_update(object = session, tools_list = list(return_example_data = return_data))
+```
+
+Here, we ask `session` to retrieve `example_data` using the `return_data()` function. Unlike when providing data frames using `data_list`, this is facilitated through `tools_env` compared to `data_env`. Therefore, the chatbot utilizes the associated client function, rather than copying `example_data` from the AI prompt. 
+
+```{r, eval=FALSE}
+session$talk("Give me my example data set")
+```
+
+Every tool/API output is stored, alongside their AI-generated name in `object_env`. Following every `$talk()` call, the contents of `object_env` is interpolated into `prompt_template`. This provides chatbots with memory of remote service responses, facilitating further discussion and manipulation.
+
+Since our output has now been interpolated into `prompt_template`, the chatbot can view `example_data`. Therefore, when asked to retrieve the value below, `session` should return `13`.
+
+```{r, eval=FALSE}
+session$talk("What's the second value in the Y column of my example data?")
+```
+
+<br>
+
+### Manipulating Previous AI Responses
+
+Performing more complex tasks using `example_data` may require an additional tool or API service. However, `session` remains an Ollama agentic AI. Therefore, even without custom functions, it is capable of simple statistical descriptors like computing averages.
+
+```{r, eval=FALSE}
+session$talk("What is the mean value in the X column of my example data?")
+```
+
+Lastly, we ask `session` to extract values from our data set to use as inputs in our addition tool. Given that the last two Y values in `example_data` are `28` and `30`, `session` should return the value `58`.
+
+```{r, eval=FALSE}
+session$talk("Use a service to add together the last two values from the Y column of my example data")
+```
+
+<br>
+
+### Chained API Calls
+
+The workflow above involved retrieving data from a tool, before asking this data to be used as input in another tool/service. This was demonstrated using two separate `$talk()` calls, whereas this may also be facilitated with a single user input. The default prompt includes specific instruction to pass AI-generated, human-readable output names as inputs to subsequent services, to facilitate chained API calls. These names are resolved into their stored objects using `resolve_arg_refs()` and both service responses are outputted in a named list.
+
+General AI summaries of service outputs can be appended to results with a single input query by setting the `$talk()` argument `summarize` to `TRUE`. The default summary prompt ensures that chatbots do not call any further services and concerns descriptive statistics, output shape or structure and contextual interpretations. This prompt is applicable to any output type and may be found in `inst/prompt` under `summary_prompt.md`. Custom summaries per service may also be provided as character strings or Markdown file paths via the `R6` argument `summary_list`.

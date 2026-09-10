@@ -1,0 +1,32 @@
+---
+title: "Providing Tool Functions"
+output: rmarkdown::html_vignette
+---
+
+### Defining Tool Functions in R
+
+Here, we define a simple addition tool as an R function named `add`, taking the arguments `x` and `y`.
+
+```{r, eval=FALSE}
+add <- function(x,y) {
+  x + y
+} 
+```
+
+<br>
+
+### Providing Chatbots with Tool Functions
+
+We add `add` to our existing tools environment by listing this function in the named list `tools_list`, using the `ChatRBox_update()` function.
+
+```{r, eval=FALSE}
+ChatRBox_update(object = session, tools_list = list(add_two_numbers = add))
+```
+
+Asking our chatbot to use this service for a simple arithmetic results in the `add` tool output, alongside an AI dialogue.
+
+```{r, eval=FALSE}
+session$talk("Use a service to compute 70 + 76") 
+```
+
+Tool addition works identically to API URL (`services_list`), OpenAPI schema URL (`openapi_list`) and data frame (`data_list`) addition, whereby tools may be defined during chatbot initialization or update. When adding tools via `ChatRBox_update()`, only the tools to be added need be referenced, whilst previously stored tool functions remain accessible.

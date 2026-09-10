@@ -1,0 +1,38 @@
+---
+title: "Chatbot Re-initialization"
+output: rmarkdown::html_vignette
+---
+
+### When to Re-initialize
+
+Whilst chatbot re-initialization may resolve lagging AI response times or accuracy following long conversations, it is not often required as AI turns facilitate chatbot memory. However, `ChatRBox_update()` does not accommodate changing `ai_provider` or additional properties like `model`, meaning re-initialization may be used to switch AI provider or alter external arguments. 
+
+`ChatRBox_update()` also adds API services, tools and data cumulatively, meaning re-initialization may be used to clear these fields. This may also be achieved for `tools_list` and `data_list` by creating new tools and data environments, respectively.
+
+<br>
+
+### Using Multiple AI Chatbots
+
+Here, we re-initialize `session`, alongside creating another chatbot named `new`. `new` has been instructed to omit the letter 'A' from replies, whereas `session` omits the letter 'E'. Both utilize the `gpt-oss` model in Ollama but are entirely independent, demonstrating the implications of multiple `R6` objects. 
+
+```{r, eval=FALSE}
+session <- ChatRBox$new(ai_provider = ellmer::chat_ollama, 
+                        base_url = Sys.getenv("OLLAMA_HOST", unset = "http://localhost:11434"),
+                        model = Sys.getenv("OLLAMA_MODEL", unset = "mistral")),
+                        prompt_template = "Don't include the letter 'E' in your responses")
+
+new <- ChatRBox$new(ai_provider = ellmer::chat_ollama, 
+                    base_url = Sys.getenv("OLLAMA_HOST", unset = "http://localhost:11434"),
+                    model = Sys.getenv("OLLAMA_MODEL", unset = "mistral")),
+                    prompt_template = "Don't include the letter 'A' in your responses")
+```
+
+We can interact with either chatbot using `$talk()`, whereby the properties of `session` and `new` are self-contained. These chatbots may be used and updated independently, allowing for simultaneous AI workflows with specialist features (tools, data, APIs, prompts...) and performance comparison. 
+
+Here, we ask our chatbots the same question to compare AI outputs.    
+
+```{r, eval=FALSE}
+session$talk("What is the capital of the USA?")
+
+new$talk("What is the capital of the USA?") 
+```

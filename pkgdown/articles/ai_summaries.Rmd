@@ -1,0 +1,69 @@
+---
+title: "AI Summaries"
+output: rmarkdown::html_vignette
+---
+
+### Appending AI-Generated Summaries
+
+As asking chatbots to summarize information retrieved from tool functions or API services is a common ChatRBox use-case, this has been encapsulated into a single `$talk()` argument named `summarize`. `summarize` takes logical inputs, whereby this defaults to `FALSE` which outputs service results without an associated AI-generated summary. However, setting `summarize` to `TRUE` creates AI summaries of tool/API outputs without the need to ask for such using a second `$talk()` command. 
+
+Here, we define a tool that returns an exert from Shakespeare's play, Macbeth, as a character string. This is supplied to our chatbot `session` using `ChatRBox_update()`, and assigned the name `return_macbeth`.
+
+```{r, eval=FALSE}
+return_macbeth <- function() {
+  quote <- "Is this a dagger which I see before me, the handle toward my hand? Come, let me clutch thee."
+  return(quote)
+}
+
+ChatRBox_update(object = session, tools_list = list(return_macbeth_quote = return_macbeth))
+```
+
+Firstly, we ask `session` to use this service without the `summarize` argument assigned to `TRUE`. This results in the AI dialogue, human-readable name and output of our `return_macbeth` function only.  
+
+```{r, eval=FALSE}
+session$talk("Use a service to return my Macbeth quote")
+```
+
+Next, we ask the same question, except set `summarize` to `TRUE`. This appends an AI-generated summary of our tool output to the LLM response, informed by the default summary prompt. Note that this summary feature is available for both tool and API outputs because these are viewed equivalently by chatbots.
+
+```{r, eval=FALSE}
+session$talk("Use a service to return my Macbeth quote", summarize = TRUE)
+```
+
+<br>
+
+### Setting Summary Prompts
+
+The default summary prompt is located in `inst/prompt` under `summary_prompt.md` and concerns descriptive statistics, output shape or structure and contextual interpretations. This prompt is generalizable to any API output type and ensures that chatbots enter 'summary mode', whereby they do not call any further services. However, users may define custom summary prompts similarly to the `R6` argument `prompt_template`, using `summary_list`. Users can enter character strings or Markdown file paths, since the `load_prompt_md()` function is used to supply both overall and summarization AI prompts.
+
+Unlike `prompt_template`, `summary_list` is a named list meaning users may provide distinct summary prompts per service. These are matched to the corresponding service using name matching logic, meaning errors will throw if names have no associated service, are missing or are duplicated.
+
+Here, we define two more tool functions and provide them to `session` via `ChatRBox_update()`. The function `return_hamlet` returns an exert from Shakespeare's Hamlet, whereas the function `return_romeo_juliet` returns an exert from Shakespeare's Romeo & Juliet. 
+
+```{r, eval=FALSE}
+return_hamlet <- function() {
+  quote <- "Though this be madness, yet there is method in't."
+  return(quote)
+}
+
+return_romeo_juliet <- function() {
+  quote <- "But, soft! What light through yonder window breaks? It is the east, and Juliet is the sun."
+  return(quote)
+}
+
+ChatRBox_update(object = session, tools_list = list(return_hamlet_quote = return_hamlet,
+                                                    return_romeo_juliet_quote = return_romeo_juliet))
+```
+
+Next we provide `session` with distinct summary prompts for `return_hamlet` and `return_romeo_juliet`, using `summary_list`. Note that these have been applied using the exact names assigned during chatbot update.
+
+```{r, eval=FALSE}
+ChatRBox_update(object = session, summary_list = list(return_hamlet_quote = "Output summaries in French",
+                                                      return_romeo_juliet_quote = "Output summaries in Spanish"))
+```
+
+Finally, we ask `session` to employ both of these functions and set `summarize` to `TRUE`. This will append an AI-generated summary to both tool outputs in a named list, but our prompting facilitates these in distinct languages.
+
+```{r, eval=FALSE}
+session$talk("Use services to return my Hamlet and Romeo & Juliet quotes", summarize = TRUE)
+```

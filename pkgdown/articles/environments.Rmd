@@ -1,0 +1,16 @@
+---
+title: "A Note on Environments"
+output: rmarkdown::html_vignette
+---
+
+### Creating New Environments
+
+`tools_env`, `data_env`, `object_env` and `config_env` are properties of the `R6` object ChatRBox and may be updated in place using `ChatRBox_update()`. Users may set these arguments to `NULL` or `new.env()` to create new environments, which occurs by default during initialization. 
+
+Replacing environments removes stored content, meaning users may prefer to also re-populate `tools_list` and `data_list` during this update. There is no equivalent `services_env` for API services as these are stored in nested environments within `tools_env` to avoid namespace conflicts. Therefore, removal of existing APIs requires chatbot re-initialization.
+
+Here, we create new environments for `tools_env`, `data_env`, `object_env` and `config_env`, withdrawing AI access to previously defined tools, data, past AI responses and `httr2` request options.
+
+```{r, eval=FALSE}
+ChatRBox_update(object = session, tools_env = NULL, data_env = NULL, object_env = NULL, config_env = NULL) 
+```

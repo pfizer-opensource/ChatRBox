@@ -1,0 +1,93 @@
+name: LLM Interface Evaluation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions: read-all
+
+jobs:
+  llm-eval:
+    runs-on: ubuntu-latest
+    env:
+      R_KEEP_PKG_SOURCE: yes
+      RENV_CONFIG_AUTOLOAD_ENABLED: "FALSE"
+      RENV_CONFIG_USER_PROFILE: "FALSE"
+      OLLAMA_HOST: http://localhost:11434
+      OLLAMA_MODEL: mistral
+      TESTTHAT_RUN_OLLAMA: "true"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Disable project .Rprofile in CI
+        shell: bash
+        run: |
+          rm -f .Rprofile
+
+      - name: Install Ollama
+        run: curl -fsSL https://ollama.com/install.sh | sh
+
+      - name: Ensure Ollama model cache directory exists
+        run: mkdir -p ~/.ollama/models
+
+      - name: Cache Ollama model
+        id: cache-ollama-model
+        uses: actions/cache@v4
+        with:
+          path: ~/.ollama/models
+          key: ollama-${{ env.OLLAMA_MODEL }}
+
+      - name: Start Ollama server
+        shell: bash
+        run: |
+          ollama serve > /tmp/ollama.log 2>&1 &
+
+      - name: Wait for Ollama to be ready
+        shell: bash
+        run: |
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:11434/api/tags > /dev/null; then
+              echo "Ollama ready"
+              exit 0
+            fi
+            sleep 2
+          done
+          cat /tmp/ollama.log
+          exit 1
+
+      - name: Pull Ollama model
+        run: ollama pull ${{ env.OLLAMA_MODEL }}
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: release
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::rcmdcheck, any::ellmer
+          needs: check
+
+      - name: Write Ollama env vars to ~/.Renviron
+        shell: bash
+        run: |
+          echo "TESTTHAT_RUN_OLLAMA=true" >> ~/.Renviron
+          echo "OLLAMA_HOST=http://localhost:11434" >> ~/.Renviron
+          echo "OLLAMA_MODEL=mistral" >> ~/.Renviron
+
+      - name: R CMD check (with examples)
+        uses: r-lib/actions/check-r-package@v2
+        with:
+          args: 'c("--no-manual")'
+          error-on: '"error"'
+          upload-snapshots: false
+        env:
+          TESTTHAT_REPORTER: "verbose"
+
+      - name: Stop Ollama server
+        if: always()
+        run: pkill ollama || true

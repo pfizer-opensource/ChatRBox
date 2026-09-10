@@ -1,0 +1,35 @@
+---
+title: "Providing Data Frames"
+output: html_document
+---
+
+### Providing Data Frames Defined in R
+
+Here, we define a bivariate data frame in R named `example_data`, with the intention to produce a linear plot of X against Y using a local API service.
+
+```{r}
+example_data <- data.frame(
+  X = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10),
+  Y = c(10, 13, 15, 18, 21, 20, 23, 27, 28, 30)
+)
+```
+
+As `session` is a mutable `R6` object, the arguments can be modified in-place using `ChatRBox_update()`. The first argument of this function is `object` where we refer to our chatbot by name. The remaining arguments mirror those listed for ChatRBox (omitting `ai_provider` and `...` as these imply re-initialization) but are cumulative with respect to the existing `R6` object. Therefore, only the arguments to add need to be referenced, whilst previously defined services, tools and data remain.
+
+Here, we provide `session` with `example_data` by listing the data frame in `data_list`. The contents of `data_list` is added to the data environment `data_env`, which is automatically interpolated into the AI prompt. Therefore, chatbots can immediately view, summarize or manipulate `example_data`, as depicted by the corresponding `$talk()` call. 
+
+```{r, eval=FALSE}
+ChatRBox_update(object = session, data_list = list(example_data = example_data))
+
+session$talk("Describe the dimensions of my example data set")
+```
+
+Importantly, chatbot updates do not ensue re-initialization meaning `session` has both memory of any past conversation and access to our newly defined data frame. 
+
+<br>
+
+### R6 vs S7 Objects
+
+Although the ChatRBox `R6` object is the only user-facing class, this actually encompasses a `ChatRBox_obj` `S7` class that stores the arguments used to inform `R6` object properties. Therefore, `ChatRBox_update()` modifies both the `S7` and dependent `R6` objects, enabling the automatic adjustment of `prompt_template` given added API services or tool functions. These `R6` and `S7` objects are analogous to the `ellmer` `Chat` and `Provider` objects, respectively. Therefore, many `ellmer` methods may be applied to ChatRBox objects. For example, `$set_system_prompt()` is used within `ChatRBox_update()` to assign the new `S7` AI prompt to the user-facing `R6` class. 
+
+Checking the contents of our data environment may be achieved via `ls(session$chat_object@data_env)`. Here, `session` is our named chatbot and `R6` object, `chat_object` is our underlying `S7` object and `data_env` stores all data inputs provided via `data_list`. Note that every generated `S7` object is named `chat_object`.

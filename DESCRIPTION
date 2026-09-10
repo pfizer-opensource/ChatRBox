@@ -1,0 +1,47 @@
+Package: ChatRBox
+Title: Your Chatbot Development Toolkit
+Version: 0.2.7
+Authors@R: 
+    c(
+      person("Abigail", "Barnett", email = "Abigail.Barnett@pfizer.com", role = c("aut", "cre"), comment = c(ORCID = "0009-0009-1441-4929")),
+      person("Richard", "Virgen-Slane", email = "Richard.Virgen-Slane@pfizer.com", role = "aut", comment = c(ORCID = "0000-0002-0011-3844"))
+    )
+Description: A toolkit for users of varied coding experience to build custom AI chatbots 
+             as R6 objects. Users may create or supply APIs, R tool functions or AI prompts that 
+             integrate with existing LLM providers like 'ellmer' (Wickham et al., 2025, <https://ellmer.tidyverse.org>). 
+             ChatRBox emphasizes modular tool registration and API integration, and may be employed 
+             to create agents that automate tasks, optimize existing workflows or underpin AI pipelines.
+Depends: R (>= 4.2.0)
+License: Apache License (>= 2) | file LICENSE
+Encoding: UTF-8
+Imports:
+  callr,
+  cli,
+  glue (>= 1.6.1),
+  httr2 (>= 1.2.1),
+  jpeg,
+  jsonlite,
+  keyring,
+  magick,
+  magrittr,
+  plumber2,
+  png,
+  purrr,
+  R6,
+  rlang,
+  S7,
+  stats,
+  stringr,
+  yaml
+Suggests:
+  config,
+  dplyr,
+  ellmer (>= 0.4.0),
+  ggplot2,
+  mockery,
+  pkgdown,
+  testthat (>= 3.0.0),
+  webfakes,
+  withr
+RoxygenNote: 7.3.3
+Config/testthat/edition: 3

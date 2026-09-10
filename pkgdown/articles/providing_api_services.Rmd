@@ -1,0 +1,76 @@
+---
+title: "Providing API Services"
+output: rmarkdown::html_vignette
+---
+
+### Deploying the Local API Service
+
+API services and R tool functions are viewed as equivalent resources by chatbots, whilst we know that APIs are accessed remotely whereas functions are defined in R. We will simulate providing `session` with a remote API using a local plumber2 API for linear plots. We 'deploy' this service using `start_api_service()` which has a default port and host leading to the root URL `http://127.0.0.1:8000`. ChatRBox uses [plumber2](https://plumber2.posit.co/), the successor to plumber, which additionally supports asynchronous request handling.
+
+`start_api_service()` uses the `callr` package to launch the local plumber2 API in a background R process. The R function call is evaluated and immediately returned, temporarily copying user `.Renviron` files. Users who keep sensitive information in `.Renviron` files may wish to load credentials using the `keyring` method. (See `Setting Up Your AI Provider` section). 
+
+```{r, eval=FALSE}
+proc <- start_api_service()
+Sys.sleep(2) 
+```
+
+Here, we run a check to ensure that the site is live. This should return the logical `TRUE`.
+
+```{r, eval=FALSE}
+proc$is_alive()
+```
+
+This API service can be stopped at any time by running `proc$kill()`. Following this command, `proc$is_alive()` should return the logical `FALSE`.
+
+<br>
+
+### Providing APIs via Base URLs
+
+The URL `http://127.0.0.1:8000` acts like any remote plumber2 API URL and may be passed to the `ChatRBox_update()` function. This occurs using a named list like adding R tool functions or data frames, except that we're listing our URL in the `services_list` argument. Here, we name our local API `line_plot`. API service URLs must be root URLs, meaning they do not end in a trailing slash. 
+
+```{r, eval=FALSE}
+ChatRBox_update(object = session, services_list = list(line_plot = "http://127.0.0.1:8000")) 
+```
+
+Here, we provide `session` with a data frame to plot using our local API and employ the `$talk()` command. 
+
+```{r, eval=FALSE}
+example_data <- data.frame(
+  X = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10),
+  Y = c(10, 13, 15, 18, 21, 20, 23, 27, 28, 30)
+)
+
+ChatRBox_update(object = session, data_list = list(example_data = example_data))
+
+session$talk("Produce a linear plot of example_data") 
+```
+
+<br>
+
+### API Outputs
+
+Notice that the returned graphic is accompanied by a text output in the console. The default prompt ensures this addition, whereby chatbots should explain the reasoning and context for chosen services. Users may decide to discard this feature using personalized `prompt_template` arguments during initialization, or by editing the default prompt Markdown file. The latter may be found under `prompt.md` in `inst/prompt`. (See `AI Prompting` article).
+
+The linear plot likely displayed in the R plots panel, whereas the console contained a placeholder in a named list. The associated name is an AI-generated identifier for this API result. Chatbots may use this identifier when recalling or manipulating previous service outputs. (See `API/Tool Output Memory` article). 
+
+These AI-generated and human-readable names also enable chained API calls with single user inputs. Chatbots retrieve and store objects, before passing corresponding names as subsequent API arguments. These names are resolved into the associated object types to facilitate the secondary API response.
+
+<br>
+
+### Requirements for Providing APIs via Base URLs 
+
+Supplied API services and tool functions are made available to chatbots using the function `get_api_client_fns()`. This installs client functions from the `client_fns` endpoint of remote API services. This endpoint is a prerequisite for user APIs to be supplied to chatbots via `services_list`, and must include API client function R source code. This is later downloaded and evaluated in a given environment. Note that running `get_api_client_fns()` in an R session also makes these functions available to users. 
+
+The `client_fns` endpoint may be generated using the Markdown template under `inst/client_fns_template`. This may be adapted and passed to an LLM, whereby LLMs should return `client_fns` R code to append to existing `plumber.R` files.
+
+<br>
+
+### Providing APIs via OpenAPI JSON Schema URLs
+
+External packages without the `client_fns` endpoint may also be supplied to chatbots via `openapi_list`. This argument works similarly to `services_list` in that URLs are contained within a named list, but `openapi_list` includes URLs for OpenAPI schemas (usually '/openapi.json' appended to the API base URL). If APIs are provided using `openapi_list`, client functions are rather automatically generated before being passed to chatbots, meaning API modification is not required. Users may use either method dependent on their desired level of control, whereby including the `client_fns` endpoint reduces the potential for error and may be beneficial for complex or internal APIs.
+
+Here, we demonstrate providing `session` with a fictitious API without the `client_fns` endpoint, using the `openapi_list` argument.
+
+```{r, eval=FALSE}
+ChatRBox_update(object = session, openapi_list = list(fake_service = "https://exampleapi/openapi.json")) 
+```

@@ -1,0 +1,11 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^\.Rhistory$
+^\.github$
+^_pkgdown\.yml$
+^pkgdown$
+^\.pfizer\.yml$
+^README\.Rmd$
+^CONTRIBUTING\.md$
+^CODE_OF_CONDUCT\.md$
+^LICENSE\.md$

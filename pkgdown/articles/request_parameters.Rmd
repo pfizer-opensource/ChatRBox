@@ -1,0 +1,40 @@
+---
+title: "Setting Request Parameters"
+output: rmarkdown::html_vignette
+---
+
+### Setting httr2 Request Parameters
+
+`httr2` request parameters are included in API client functions to dictate the methods by which remote HTTP calls are facilitated. If users choose to write their own client functions and append these to API services using a dedicated `client_fns` endpoint, these APIs should be supplied to chatbots using `services_list`. Here, users may define `httr2` parameters within their client function source code.
+
+However, if users supply APIs to chatbots via `openapi_list`, ChatRBox automatically generates client functions, meaning users can set their `httr2` request parameters using the `R6` argument `httr2_config`. This is a list of request options that is combined with default assignments, such that users may supply and update individual parameters independently. 
+
+This workflow currently only facilitates `timeout`, `retry` and `verbose` assignments as these were deemed most relevant to API calling. These parameters default to `timeout = 30`, `retry = list(max_tries = 2)` and `verbose = FALSE` within `normalize_httr2_config()`, which are utilized in client function generation when `httr2_config` is omitted or set to `list()` during chatbot initialization. 
+
+Here, we demonstrate initializing the Ollama AI provider with the `httr2_config` argument and a fictitious OpenAPI schema URL. 
+
+```{r, eval=FALSE}
+request <- ChatRBox$new(ai_provider = ellmer::chat_ollama, 
+                        base_url = Sys.getenv("OLLAMA_HOST", unset = "http://localhost:11434"),
+                        model = Sys.getenv("OLLAMA_MODEL", unset = "mistral")),
+                        openapi_list = list(fake_service = "https://exampleapi/openapi.json"),
+                        httr2_config = list(
+                         timeout = 60,
+                         retry = list(max_tries = 10, retry_on_failure = TRUE),
+                         verbose = TRUE))
+
+```
+
+These `httr2` parameters would override default assignments during client function generation for `fake_service` endpoints, and interpolate into the ChatRBox error message for any failed API requests. Error messages also contain the attempted client path and parameters, general API HTTP error and suggested next steps.
+
+<br>
+
+### Updating httr2 Request Parameters
+
+Here, we update the `httr2_config` assignments using `ChatRBox_update()`. Since only `timeout` has been referenced, the new `httr2` request body will keep `retry = list(max_tries = 10, retry_on_failure = TRUE)` and `verbose = TRUE`, but client functions will be regenerated with the collective new preferences. 
+
+```{r, eval=FALSE}
+ChatRBox_update(object = request, httr2_config = list(timeout = 120))
+```
+
+Note that `httr2_config` assignments are applied to all OpenAPI schema URLs present in `openapi_list` for ease of chatbot initialization. If users require differing `httr2` request options per service, they are advised to utilize distinct chatbots. 

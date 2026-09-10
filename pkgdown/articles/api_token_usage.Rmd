@@ -1,0 +1,38 @@
+---
+title: "API Token Usage"
+output: rmarkdown::html_vignette
+---
+
+ChatRBox enables the use of tokens to access protected API services, using distinct workflows depending on whether the API was provided as a base URL or OpenAPI schema URL. Users may input character tokens as named lists via the `token_service` or `token_openapi` parameters, upon chatbot initialization. These are accompanied by corresponding `header_service` and `header_openapi` named lists to depict custom HTTP headers (e.g "X-API-Key"). The names contained within these lists must not only exactly match each other but also match the appropriate service name, since tokens are applied using name-matching. Warnings will be thrown for missing, mismatching or duplicated names.
+
+<br>
+
+### Tokens for API URLs
+
+Here, we demonstrate the initialization of a chatbot named `access` using the Ollama AI provider and `mistral` AI model. A fictitious protected API has been provided as an API base URL via `services_list`. Therefore, the token and token header have been provided as identically named lists using `token_service` and `header_service`, respectively.   
+
+```{r, eval=FALSE}
+access <- ChatRBox$new(ai_provider = ellmer::chat_ollama, 
+                        base_url = Sys.getenv("OLLAMA_HOST", unset = "http://localhost:11434"),
+                        model = Sys.getenv("OLLAMA_MODEL", unset = "mistral")),
+                        services_list = list(token = "https://exampleapi/token"),
+                        token_service = list(token = "MY_SECRET_TOKEN"),
+                        header_service = list(token = "X-API-Key"))
+```
+
+<br>
+
+### Tokens for OpenAPI JSON Schema URLs
+
+Here is the equivalent chatbot initialization to provide this protected API service as an OpenAPI JSON schema URL. This method rather creates API client functions, unlike loading APIs via `services_list` which requires a `client_fns` endpoint.
+
+```{r, eval=FALSE}
+access <- ChatRBox$new(ai_provider = ellmer::chat_ollama, 
+                        base_url = Sys.getenv("OLLAMA_HOST", unset = "http://localhost:11434"),
+                        model = Sys.getenv("OLLAMA_MODEL", unset = "mistral")),
+                        openapi_list = list(token = "https://exampleapi/token/openapi.json"),
+                        token_openapi = list(token = "MY_SECRET_TOKEN"),
+                        header_openapi = list(token = "X-API-Key"))
+```
+
+Whilst only the `header_service` and `header_openapi` arguments are contained within the chatbot `R6` object for ease, ChatRBox functions also facilitate the use of `auth_scheme` for authorization methods (e.g "Bearer"). Hence, passing authorization methods to AI chatbots requires modification of package source code. 

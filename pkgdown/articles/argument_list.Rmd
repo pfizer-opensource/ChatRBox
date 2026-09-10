@@ -1,0 +1,60 @@
+---
+title: "Chat Object Argument List"
+output: rmarkdown::html_vignette
+---
+
+### AI Provider Arguments
+
+* `ai_provider` : This is the `ellmer::chat_` function for the desired AI provider, without parentheses. Therefore, relevant authentication must be acquired (see `ellmer` package for details: https://ellmer.tidyverse.org) but the `ellmer::chat_ollama()` function has mainly been utilized throughout the vignette. Note that internal LLM packages with similar structures to `ellmer` are also supported. This is a required argument.
+
+* `...` : This encapsulates any arguments of the function specified in `ai_provider`. These will vary between R packages and AI providers so it is assumed that users understand the prerequisites of their chosen service. `ellmer::chat_ollama()` defines AI model using `model`, which has been set to `gpt-oss` in this vignette. Example additional arguments include `echo`, API URls or authentication keys. Given the variety in AI providers, chat object creation using `ChatRBox$new()` references only `...` except for the `system_prompt` argument. As the AI prompt is generated based on user input, this parameter cannot be supplied and is hard-coded. However, the name `system_prompt` is thought to be standardized across AI providers and the ChatRBox source code may be modified to rely on argument position if necessary.
+
+<br>
+
+### Providing APIs, Tool Functions and Data
+
+* `services_list` : Users may impart AI functionality via API services or R tool functions. `services_list` is a named list of root URLs corresponding to deployed APIs. Client function source code within the `client_fns` GET endpoint for each service will not only be supplied to the chatbot for API access, but used to construct the default AI prompt. No API services are provided by default but a local plumber2 API is included in `inst/api_service` to demonstrate the remote process.  
+
+* `tools_list` : This is a named list of tool functions, defined in an R session. Both `services_list` and `tools_list` provide the chatbot with resources, whilst the former are requested remotely. As API client and tool functions are collated in the AI prompt, such distinction is irrelevant to the chatbot. However, a user may favor a given technique based on the desired speed, scalability or applicability of their resource. No tool functions are provided by default.
+
+* `openapi_list` : Alongside API root URLs, users may provide chatbots with API access using OpenAPI schemas.  `openapi_list` is a named list of OpenAPI schema URLs corresponding to deployed plumber2 APIs. Unlike those within `services_list`, these APIs do not require the `client_fns` GET endpoint. Therefore, client functions are automatically generated which may be advantageous for external services. No OpenAPI schema URLs are provided by default.    
+
+* `data_list` : This is a named list of data frames supplied for use with API services or R tool functions. These will be added to a data environment and loaded into the relevant resource. No data frames are provided by default but base R data sets like `iris` are available when operating in an R session. As the data environment is automatically interpolated into the AI prompt, chatbots can immediately view, manipulate and summarize uploaded data. 
+
+<br>
+
+### Defining Environments
+
+* `tools_env` : This is the tools environment in which services listed in `tools_list`, `services_list` and `openapi_list` and are added. To avoid namespace conflict, API services are placed into this environment but nested within the `api_services` environment. `tools_env` informs the structured service paths in the system prompt, enabling prompt-based tool-calling. As R tool functions are locally defined, conflict avoidance has not been included. Therefore, users must take caution when overwriting tool functions. This argument defaults to a new tools environment.  
+
+* `data_env` : This is the data environment in which functions listed in `data_list` are added. Data frames may be summarized and manipulated by chatbots or passed as API arguments using stored names. This argument defaults to a new data environment.
+
+* `object_env` : This is the object environment that stores past API service and R tool function outputs as named R objects of any type. The contents of `object_env` are interpolated into the AI prompt using `glue` following every LLM call. Therefore, the chatbot may access previous outputs during conversation, enabling the summarization and manipulation of past outputs. The default AI prompt collates these outputs in `{past_outputs}`. Notably, `object_env` allows chatbots to reference these outputs by their human-readable names as client function arguments in chained API calls.
+
+* `config_env` : This is the configuration environment that stores `httr2` request parameters as defined using `httr2_config`. These options are combined with default settings, such that users may set and update individual parameters independently of one another. However, the ChatRBox configuration workflow currently only facilitates setting `timeout`, `retry` and `verbose` preferences, which were deemed most relevant to API calling.
+
+<br>
+
+### AI Prompting
+
+* `prompt_template` : This is the AI prompt that informs chatbot behavior. This argument is fittingly named `prompt_template` rather than `prompt` because it may reference API service or tool function paths and arguments using `{paths_string}` and `{args_string}` respectively. It also references past service outputs and uploaded data using `{past_outputs}`. These are extracted and interpolated into the prompt using `glue`. The default prompt instructs the chatbot to choose and populate the most suitable client function(s) listed in `{paths_string}` and is located in `inst/prompt` under `prompt.md` .
+
+* `summary_list` : This is a named list of summarization prompts that are matched to tools/services using identical name matching logic to API token functionality. When the `summarize` argument within `$talk()` is set to `TRUE`, an AI-generated summary will append to service outputs informed by prompting within `summary_list`. This architecture enables services to utilize distinct summary prompts, whereby these may be additively updated using `ChatRBox_update()` and omitting services from `summary_list` utilizes default summary prompting. The default prompt is located in `inst/prompt` under `summary_prompt.md` and concerns descriptive statistics, output shape or structure and contextual interpretations.      
+
+<br>
+
+### Token Usage
+
+* `token_service` : This is a named list of API tokens for provided API root URLs, whereby names must match those in `services_list`. No tokens are provided by default, but this utility may be advantageous for internal services.
+
+* `header_service` : This is a named list of token authentication methods for provided API root URLs, whereby names must match those in both `services_list` and `token_service`. No token headers are provided by default. 
+
+* `token_openapi` : This is a named list of API tokens for provided OpenAPI schema URLs, whereby names must match those in `openapi_list`. No tokens are provided by default, but this utility may be advantageous for external services. 
+
+* `header_openapi` : This is a named list of token authentication methods for provided  OpenAPI schema URLs, whereby names must match those in both `openapi_list` and `token_openapi`. No token headers are provided by default. 
+
+<br>
+
+### Client Function Generation
+
+* `httr2_config` : This is a list of `httr2` request parameters that are used during client function generation for APIs provided as OpenAPI schema URLs via `openapi_list`. It is assumed that users may set `httr2` request preferences within client function source code for APIs provided as URLs via `services_list`. `httr2_config` is merged with the default assignments for `timeout`, `retry` and `verbose`, such that parameters may be individually set and updated. As these parameters inform client function generation, updating `httr2_config` re-generates client functions and the parameters employed during failed API calls are interpolated into the ChatRBox error message. This allows users to update `httr2_config` accordingly to achieve their desired results. 

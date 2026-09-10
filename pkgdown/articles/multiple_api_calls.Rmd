@@ -1,0 +1,44 @@
+---
+title: "Multiple API/Tool Calls"
+output: rmarkdown::html_vignette
+---
+
+### Defining Multiple Tool Functions
+
+ChatRBox facilitates the employment of many APIs by populating multiple client functions using `do.call()` across a `for` loop. Once chatbots choose their desired service(s), they are instructed to produce a JSON object containing the service path, AI-generated name and client function arguments. In cases where multiple services are required, chatbots will rather return an array of JSON objects.  
+
+Here, we define arithmetic tool functions for addition, subtraction and multiplication. We provide these to `session` using `ChatRBox_update()` in a named list. 
+
+```{r, eval=FALSE}
+add <- function(x,y) {
+  x + y
+}
+
+subtract <- function(x,y) {
+  x - y
+}
+
+multiply <- function(x,y) {
+  x * y
+}
+
+ChatRBox_update(object = session, tools_list = list(add_two_numbers = add, subtract_two_numbers = subtract, multiply_two_numbers = multiply))
+```
+
+<br>
+
+### Multiple AI Outputs
+
+Asking `session` three different arithmetic questions in a single input will produce a named list of results in order of operation.
+
+```{r, eval=FALSE}
+session$talk("Add together 7 and 13, multiply together 23 and 30 and subtract 13 from 89")
+```
+
+<br>
+
+### Human-Readable Names for AI Outputs
+
+The listed names are AI-generated and human-readable. These act as universal identifiers, whereby chatbots may use them to refer to service outputs, rather than less intuitive nested service paths. Users may also refer to these names when instructing chatbots on further manipulation of AI responses. 
+
+Image outputs display in the R plots panel but still receive a human-readable name for reference and download. Hence, chatbots cannot view rendered images, leading to an inability to currently summarize graphics using `$talk("Example user input", summarize = TRUE)`. Note that image rendering is not included in generated client functions, whereby this is standardized within the ChatRBox `llm_api_result()` workflow for maximum robustness, scalability and applicability. If users prefer greater control over image rendering, this should be integrated into source code within the `client_fns` endpoint and APIs should rather be provided using `services_list`.
