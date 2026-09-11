@@ -13,6 +13,8 @@ object_update(
   tools_env = object@tools_env,
   data_env = object@data_env,
   object_env = object@object_env,
+  tool_docs = isTRUE(nzchar(object@tool_docs)),
+  include_examples = FALSE,
   prompt_template = object@prompt_template,
   summary_list = list(),
   final_summary_prompt = object@final_summary_prompt,
@@ -40,6 +42,10 @@ object_update(
 \item{data_env}{Environment. Data frames are added to this environment. Defaults to existing object data environment. Therefore, inputted data frames add to, rather than replace, existing data frames.}
 
 \item{object_env}{Environment. Past API service/tool outputs are stored in this environment as named R objects of any type, used to resolve chained API calls and to inform the AI prompt via \code{past_outputs}. Defaults to existing object object environment.}
+
+\item{tool_docs}{Logical. Whether to interpolate rendered tool documentation into the prompt via \code{\link{build_tool_docs}}. Defaults to \code{S7} object current state to preserve original user intent during update.}
+
+\item{include_examples}{Logical. Whether retained tool documentation includes the \code{\\examples} section. Only relevant when \code{tool_docs = TRUE}. Defaults to \code{FALSE}.}
 
 \item{prompt_template}{Character. Customizable AI prompt to set behavior of AI model. Defaults to empty string.}
 

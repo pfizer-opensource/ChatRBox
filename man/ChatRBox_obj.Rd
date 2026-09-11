@@ -12,6 +12,7 @@ ChatRBox_obj(
   object_env = new.env(parent = emptyenv()),
   paths_string = character(0),
   args_string = character(0),
+  tool_docs = character(0),
   prompt_template = character(0),
   summary_list = list(),
   final_summary_prompt = character(0),
@@ -33,6 +34,8 @@ ChatRBox_obj(
 \item{paths_string}{Character. Concatenated function paths. Defaults to \code{character(0)}.}
 
 \item{args_string}{Character. Concatenated function paths with arguments. Defaults to \code{character(0)}.}
+
+\item{tool_docs}{Character. Rendered tool documentation interpolated into the prompt when \code{tool_docs = TRUE}. Defaults to \code{character(0)}.}
 
 \item{prompt_template}{Character. Template used to generate AI prompt. Defaults to \code{character(0)}.}
 
@@ -60,6 +63,7 @@ This object class is generated in \code{\link{ChatRBox}} using \code{\link{objec
   \item{object_env}{Environment. Environment containing past API/tool outputs stored as named R objects of any type, used to resolve chained API calls and to inform the AI prompt via \code{past_outputs}. Defaults to empty environment.}
   \item{paths_string}{Character. Concatenated function paths. Defaults to \code{character(0)}.}
   \item{args_string}{Character. Concatenated function paths with arguments. Defaults to \code{character(0)}.}
+  \item{tool_docs}{Character. Rendered tool documentation interpolated into the prompt when \code{tool_docs = TRUE}. Defaults to \code{character(0)}.}
   \item{prompt_template}{Character. Template used to generate AI prompt. This may refer to \code{paths_string} and \code{args_string} which append using \code{glue::glue()}. Defaults to \code{character(0)}.}
   \item{summary_list}{List. Named list of instructions for AI-enabled summaries. Defaults to empty list.}
   \item{final_summary_prompt}{Character. Single synthesis instruction steering \code{summarize = "final"}. Defaults to an empty string.}

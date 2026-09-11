@@ -13,6 +13,7 @@
 #'   \item{object_env}{Environment. Environment containing past API/tool outputs stored as named R objects of any type, used to resolve chained API calls and to inform the AI prompt via \code{past_outputs}. Defaults to empty environment.}
 #'   \item{paths_string}{Character. Concatenated function paths. Defaults to \code{character(0)}.}
 #'   \item{args_string}{Character. Concatenated function paths with arguments. Defaults to \code{character(0)}.}
+#'   \item{tool_docs}{Character. Rendered tool documentation interpolated into the prompt when \code{tool_docs = TRUE}. Defaults to \code{character(0)}.}
 #'   \item{prompt_template}{Character. Template used to generate AI prompt. This may refer to \code{paths_string} and \code{args_string} which append using \code{glue::glue()}. Defaults to \code{character(0)}.}
 #'   \item{summary_list}{List. Named list of instructions for AI-enabled summaries. Defaults to empty list.}
 #'   \item{final_summary_prompt}{Character. Single synthesis instruction steering \code{summarize = "final"}. Defaults to an empty string.}
@@ -29,6 +30,7 @@
 #' @param object_env Environment. Environment containing past API/tool outputs stored as named R objects of any type, used to resolve chained API calls and to inform the AI prompt via \code{past_outputs}. Defaults to empty environment.
 #' @param paths_string Character. Concatenated function paths. Defaults to \code{character(0)}.
 #' @param args_string Character. Concatenated function paths with arguments. Defaults to \code{character(0)}.
+#' @param tool_docs Character. Rendered tool documentation interpolated into the prompt when \code{tool_docs = TRUE}. Defaults to \code{character(0)}.
 #' @param prompt_template Character. Template used to generate AI prompt. Defaults to \code{character(0)}.
 #' @param summary_list List. Optional named list of instructions for AI-enabled summaries, assigned to specific services via name matching. Prompting may be provided via character strings or a Markdown file. Defaults to empty list.
 #' @param final_summary_prompt Character. Single synthesis instruction steering \code{summarize = "final"}. Unlike the per-service \code{summary_list}, this is a single prompt applied to the one holistic answer. Supplied as a literal string or the path to a Markdown file, resolved identically to \code{prompt_template}. Defaults to an empty string.
@@ -49,6 +51,7 @@ ChatRBox_obj <- S7::new_class(
     object_env = S7::class_environment,
     paths_string = S7::class_character,
     args_string = S7::class_character,
+    tool_docs = S7::class_character,
     prompt_template = S7::class_character,
     summary_list = S7::class_list,
     final_summary_prompt = S7::class_character,
@@ -70,6 +73,8 @@ ChatRBox_obj <- S7::new_class(
       "@paths_string must be length 1"
     } else if (length(self@args_string) != 1) {
       "@args_string must be length 1"
+    } else if (length(self@tool_docs) != 1) {
+      "@tool_docs must be length 1"
     } else if (length(self@prompt_template) != 1) {
       "@prompt_template must be length 1"
     } else if (!is.list(self@summary_list)) {
@@ -263,6 +268,8 @@ get_service_keys <- function(services) {
 #' @param tools_env Environment. Tool functions are added to this environment. Defaults to NULL which creates a new environment.
 #' @param data_env Environment. Data frames are added to this environment. Defaults to NULL which creates a new environment.
 #' @param object_env Environment. Past API service/tool outputs are stored in this environment as named R objects of any type, used to resolve chained API calls and to inform the AI prompt via \code{past_outputs}. Defaults to NULL which creates a new environment.
+#' @param tool_docs Logical. Whether to interpolate rendered tool documentation into the prompt via \code{\link{build_tool_docs}}. Defaults to \code{FALSE}.
+#' @param include_examples Logical. Whether retained tool documentation includes the \code{\\examples} section. Only relevant when \code{tool_docs = TRUE}. Defaults to \code{FALSE}.
 #' @param prompt_template Character. Customizable AI prompt to set behavior of AI model. Defaults to empty string.
 #' @param summary_list List. Optional named list of instructions for AI-enabled summaries, assigned to specific services via name matching. Prompting may be provided via character strings or a Markdown file. Defaults to empty list.
 #' @param final_summary_prompt Character. Single synthesis instruction steering \code{summarize = "final"}, as opposed to the per-service \code{summary_list} used by \code{summarize = TRUE}. Supplied as a literal string or the path to a Markdown file, resolved identically to \code{prompt_template}. Defaults to an empty string.
@@ -289,6 +296,8 @@ object_generate <- function(services_list = list(),
                             tools_env = NULL,
                             data_env = NULL,
                             object_env = NULL,
+                            tool_docs = FALSE,
+                            include_examples = FALSE,
                             prompt_template = ChatRBox::load_prompt_template(),
                             summary_list = list(),
                             final_summary_prompt = "",
@@ -375,6 +384,14 @@ object_generate <- function(services_list = list(),
     if (length(env_strs) == 0L) "" else paste(env_strs, collapse = "\n\n")
   }
   
+  # Optional tool documentation interpolated into {tool_docs}
+  tool_docs <- if (isTRUE(tool_docs)) {
+    ChatRBox::build_tool_docs(tools_env, 
+                              include_examples = include_examples)
+  } else {
+    ""
+  }
+  
   prompt <- glue::glue(prompt_template)
   
   # Assign user-supplied summary prompts to services via name matching
@@ -392,6 +409,7 @@ object_generate <- function(services_list = list(),
     object_env = object_env,
     paths_string = paths_string,
     args_string = args_string,
+    tool_docs = tool_docs,
     prompt_template = prompt_template,
     summary_list = summary_list,
     final_summary_prompt = final_summary_prompt,
@@ -416,6 +434,8 @@ object_generate <- function(services_list = list(),
 #' @param tools_env Environment. Tool functions are added to this environment. Defaults to NULL which creates a new environment.
 #' @param data_env Environment. Data frames are added to this environment. Defaults to NULL which creates a new environment.
 #' @param object_env Environment. Past API service/tool outputs are stored in this environment as named R objects of any type, used to resolve chained API calls and to inform the AI prompt via \code{past_outputs}. Defaults to NULL which creates a new environment.
+#' @param tool_docs Logical. Whether to interpolate rendered tool documentation into the prompt via \code{\link{build_tool_docs}}. Defaults to \code{FALSE}.
+#' @param include_examples Logical. Whether retained tool documentation includes the \code{\\examples} section. Only relevant when \code{tool_docs = TRUE}. Defaults to \code{FALSE}.
 #' @param prompt_template Character. Customizable AI prompt to set behavior of AI model. Defaults to empty string.
 #' @param summary_list List. Optional named list of instructions for AI-enabled summaries, assigned to specific services via name matching. Prompting may be provided via character strings or a Markdown file. Defaults to empty list.
 #' @param final_summary_prompt Character. Single synthesis instruction steering \code{summarize = "final"}, as opposed to the per-service \code{summary_list} used by \code{summarize = TRUE}. Supplied as a literal string or the path to a Markdown file, resolved identically to \code{prompt_template}. Defaults to the current object value.
@@ -444,6 +464,8 @@ property_generate <- function(object,
                               tools_env = NULL,
                               data_env = NULL,
                               object_env = NULL,
+                              tool_docs = FALSE,
+                              include_examples = FALSE,
                               prompt_template = "",
                               summary_list = list(),
                               final_summary_prompt = object@final_summary_prompt,
@@ -514,6 +536,13 @@ property_generate <- function(object,
     if (length(env_strs) == 0L) "" else paste(env_strs, collapse = "\n\n")
   }
   
+  # Optional tool documentation interpolated into {tool_docs}
+  tool_docs <- if (isTRUE(tool_docs)) {
+    ChatRBox::build_tool_docs(tools_env, include_examples = include_examples)
+  } else {
+    ""
+  }
+  
   # Create interpolated system prompt
   prompt <- glue::glue(prompt_template)
   
@@ -533,6 +562,7 @@ property_generate <- function(object,
     object_env = object_env,
     paths_string = paths_string,
     args_string = args_string,
+    tool_docs = tool_docs,
     prompt_template = prompt_template,
     summary_list = summary_list,
     final_summary_prompt = final_summary_prompt,
@@ -554,6 +584,8 @@ property_generate <- function(object,
 #' @param tools_env Environment. Tool functions are added to this environment. Defaults to existing object tools environment. Therefore, inputted tool functions add to, rather than replace, existing tool functions.
 #' @param data_env Environment. Data frames are added to this environment. Defaults to existing object data environment. Therefore, inputted data frames add to, rather than replace, existing data frames.
 #' @param object_env Environment. Past API service/tool outputs are stored in this environment as named R objects of any type, used to resolve chained API calls and to inform the AI prompt via \code{past_outputs}. Defaults to existing object object environment.
+#' @param tool_docs Logical. Whether to interpolate rendered tool documentation into the prompt via \code{\link{build_tool_docs}}. Defaults to \code{S7} object current state to preserve original user intent during update.
+#' @param include_examples Logical. Whether retained tool documentation includes the \code{\\examples} section. Only relevant when \code{tool_docs = TRUE}. Defaults to \code{FALSE}.
 #' @param prompt_template Character. Customizable AI prompt to set behavior of AI model. Defaults to empty string.   
 #' @param summary_list List. Optional named list of instructions for AI-enabled summaries, assigned to specific services via name matching. Prompting may be provided via character strings or a Markdown file. Defaults to empty list.
 #' @param final_summary_prompt Character. Single synthesis instruction steering \code{summarize = "final"}, as opposed to the per-service \code{summary_list} used by \code{summarize = TRUE}. Supplied as a literal string or the path to a Markdown file, resolved identically to \code{prompt_template}. Updated additively; defaults to the current object value.
@@ -581,6 +613,8 @@ object_update <- function(object,
                           tools_env = object@tools_env,
                           data_env = object@data_env,
                           object_env = object@object_env,
+                          tool_docs = isTRUE(nzchar(object@tool_docs)),
+                          include_examples = FALSE,
                           prompt_template = object@prompt_template,
                           summary_list = list(),
                           final_summary_prompt = object@final_summary_prompt,
@@ -600,6 +634,8 @@ object_update <- function(object,
                                            tools_env = tools_env,
                                            data_env = data_env,
                                            object_env = object_env,
+                                           tool_docs = tool_docs,
+                                           include_examples = include_examples,
                                            prompt_template = prompt_template,
                                            summary_list = summary_list,
                                            final_summary_prompt = final_summary_prompt,
@@ -618,6 +654,7 @@ object_update <- function(object,
   object@object_env <- variables$object_env
   object@paths_string <- variables$paths_string
   object@args_string <- variables$args_string
+  object@tool_docs <- variables$tool_docs
   object@prompt_template <- variables$prompt_template
   object@summary_list <- variables$summary_list
   object@final_summary_prompt <- variables$final_summary_prompt

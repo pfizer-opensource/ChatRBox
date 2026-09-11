@@ -12,6 +12,8 @@ object_generate(
   tools_env = NULL,
   data_env = NULL,
   object_env = NULL,
+  tool_docs = FALSE,
+  include_examples = FALSE,
   prompt_template = ChatRBox::load_prompt_template(),
   summary_list = list(),
   final_summary_prompt = "",
@@ -37,6 +39,10 @@ object_generate(
 \item{data_env}{Environment. Data frames are added to this environment. Defaults to NULL which creates a new environment.}
 
 \item{object_env}{Environment. Past API service/tool outputs are stored in this environment as named R objects of any type, used to resolve chained API calls and to inform the AI prompt via \code{past_outputs}. Defaults to NULL which creates a new environment.}
+
+\item{tool_docs}{Logical. Whether to interpolate rendered tool documentation into the prompt via \code{\link{build_tool_docs}}. Defaults to \code{FALSE}.}
+
+\item{include_examples}{Logical. Whether retained tool documentation includes the \code{\\examples} section. Only relevant when \code{tool_docs = TRUE}. Defaults to \code{FALSE}.}
 
 \item{prompt_template}{Character. Customizable AI prompt to set behavior of AI model. Defaults to empty string.}
 

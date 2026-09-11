@@ -32,6 +32,7 @@ Imports:
   S7,
   stats,
   stringr,
+  tools,
   yaml
 Suggests:
   config,
