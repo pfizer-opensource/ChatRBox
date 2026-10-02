@@ -1,6 +1,6 @@
 Package: ChatRBox
 Title: Your Chatbot Development Toolkit
-Version: 0.2.7
+Version: 0.3.0
 Authors@R: 
     c(
       person("Abigail", "Barnett", email = "Abigail.Barnett@pfizer.com", role = c("aut", "cre"), comment = c(ORCID = "0009-0009-1441-4929")),
