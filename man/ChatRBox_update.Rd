@@ -13,6 +13,8 @@ ChatRBox_update(
   tools_env = object$chat_object@tools_env,
   data_env = object$chat_object@data_env,
   object_env = object$chat_object@object_env,
+  tool_docs = isTRUE(nzchar(object$chat_object@tool_docs)),
+  include_examples = FALSE,
   prompt_template = object$chat_object@prompt_template,
   summary_list = list(),
   final_summary_prompt = object$chat_object@final_summary_prompt,
@@ -40,6 +42,10 @@ ChatRBox_update(
 \item{data_env}{Environment. Data frames are added to this environment. Defaults to current \code{S7} object data environment.}
 
 \item{object_env}{Environment. Past API service/tool outputs are stored in this environment as named R objects of any type, used to resolve chained API calls and to inform the AI prompt via \code{past_outputs}. Defaults to current \code{S7} object object environment.}
+
+\item{tool_docs}{Logical. Whether to interpolate rendered tool documentation into the prompt via \code{\link{build_tool_docs}}. Defaults to \code{S7} object current state to preserve original user intent during update.}
+
+\item{include_examples}{Logical. Whether retained tool documentation includes the \code{\\examples} section. Only relevant when \code{tool_docs = TRUE}. Defaults to \code{FALSE}.}
 
 \item{prompt_template}{Character. General AI prompt for outputting parameter key-value pairs for available API services/tools. Defaults to current \code{S7} object prompt, likely interpolating function paths and arguments.}
 

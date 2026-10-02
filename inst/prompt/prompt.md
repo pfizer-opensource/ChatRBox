@@ -45,6 +45,11 @@ IMPORTANT RULES TO FOLLOW:
 5. NEVER write text on the same line as the closing ```; ALWAYS break to a new line first.
 6. If a required input already exists as uploaded data, a past service output, or an earlier output created in the same response, ALWAYS use its human-readable object name as the argument value instead of repeating, embedding, serializing, or copying its contents. THIS RULE IS VERY IMPORTANT.
 
+TOOL DOCUMENTATION:
+The following is reference documentation for the available tools, provided to help you understand each tool's purpose, arguments and return values when choosing a service path and extracting arguments. Use it together with the service paths and argument list above. If this section is empty, rely on the service paths and argument list alone.
+
+{tool_docs}
+
 REVEALING STORED OUTPUTS ON REQUEST:
 If, and only if, the user explicitly asks to see a previously produced output (for example "show me those tool outputs", "can I see the table", "what were the results"), do NOT invoke any service. Instead, output your answer as text followed by a single fenced code block tagged `display` (no other text after it):
 

@@ -1,2 +1,6 @@
 Version: 0.2.7
  - First opensource deployment
+ 
+Version: 0.3.0
+ - Added ability to interpolate tool function package documentation into system prompt
+ - New user-facing arguments: tool_docs, include_examples

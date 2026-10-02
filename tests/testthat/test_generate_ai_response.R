@@ -552,3 +552,38 @@ testthat::test_that("redact_sensitive preserves non-sensitive values", {
   testthat::expect_equal(out$token_list$api_key, "KEY_REDACTED")
   testthat::expect_equal(out$token_list$limit, 10)            
 })
+
+testthat::test_that("JSON extraction is unchanged after the refactor", {
+  resp <- 'x```json\n{"a":1}\n```'
+  testthat::expect_equal(code_extract(resp, language = "json"), '{"a":1}')
+})
+
+testthat::test_that("New formats extract correctly", {
+  yml <- "cfg\n```yml\nname: ChatRBox\n```\nend"
+  testthat::expect_equal(code_extract(yml, language = "yml"), "name: ChatRBox")
+  
+  csv <- "t\n```csv\na,b\n1,2\n```\ne"
+  testthat::expect_equal(code_extract(csv, language = "csv"), "a,b\n1,2")
+  
+  md <- "r\n```md\n## H\n- x\n```\ne"
+  testthat::expect_equal(code_extract(md, language = "md"), "## H\n- x")
+})
+
+testthat::test_that("Public API stays gated to supported languages", {
+  testthat::expect_error(code_extract("```toml\nk='v'\n```", language = "toml"))
+  testthat::expect_error(code_remove("```toml\nk='v'\n```", language = "toml"))
+})
+
+testthat::test_that("Low-level engine accepts any tag", {
+  resp <- "intro\n```yaml\nkey: value\n```\noutro"
+  testthat::expect_equal(
+    .code_block(resp, language = "yaml", action = "extract"), "key: value")
+  testthat::expect_equal(
+    .code_block(resp, language = "yaml", action = "remove"), "intro\n\noutro")
+})
+
+testthat::test_that("Prefix tags do not collide on the guarded remove", {
+  resp <- "a\n```markdown\n## real\n```\nb"
+  testthat::expect_true(is.na(.code_block(resp, language = "md",
+                                          action = "extract")))
+})

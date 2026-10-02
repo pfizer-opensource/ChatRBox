@@ -9,7 +9,7 @@ code_remove(string = NULL, language = "json")
 \arguments{
 \item{string}{Character. The input string containing Markdown code block(s). Required.}
 
-\item{language}{Character. The language tag of the code block to remove. Defaults to "json".}
+\item{language}{Character. The language tag of the code block. One of the supported tags in \code{.SUPPORTED_CODE_LANGUAGES} (\code{"json"}, \code{"display"}, \code{"yaml"}, \code{"yml"}, \code{"tsv"}, \code{"csv"}, \code{"md"}). This may be extended by adding to the vector assignment. See CONTRIBUTING.md for further detail. Defaults to "json".}
 }
 \value{
 A character string with specified code blocks and fences removed.

@@ -73,3 +73,37 @@ testthat::expect_equal(
     "services$subtract_two_numbers(x, y)"
   )
 )
+
+# S7/R6 tool documentation interpolation
+testthat::test_that("tool_docs defaults empty and off leaves prompt unchanged", {
+  add <- function(x, y) x + y
+  object <- object_generate(tools_list = list(add_two_numbers = add))
+  testthat::expect_identical(get_property(object, "tool_docs"), "")
+})
+
+testthat::test_that("tool_docs = TRUE populates the S7 property and prompt", {
+  add <- function(x, y) x + y
+  object <- object_generate(
+    tools_list = list(standard_deviation = stats::sd),
+    tool_docs = TRUE)
+  docs <- get_property(object, "tool_docs")
+  testthat::expect_true(nzchar(docs))
+  testthat::expect_match(get_property(object, "prompt"),
+                         "standard_deviation", fixed = TRUE)
+})
+
+testthat::test_that("tool_docs S7 property is validated as length 1", {
+  add <- function(x, y) x + y
+  object <- object_generate(tools_list = list(add_two_numbers = add))
+  testthat::expect_error(
+    { object@tool_docs <- c("a", "b") },
+    regexp = "@tool_docs must be length 1"
+  )
+})
+
+testthat::test_that("object_update regenerates tool_docs", {
+  add <- function(x, y) x + y
+  object <- object_generate(tools_list = list(add_two_numbers = add))
+  updated <- object_update(object, tool_docs = TRUE)
+  testthat::expect_true(nzchar(get_property(updated, "tool_docs")))
+})

@@ -53,6 +53,10 @@ ChatRBox <- R6::R6Class(
     #'   Environment to which data frames are added. Defaults to \code{NULL} (creates a new environment).
     #' @param object_env (`environment()`)\cr
     #'   Environment in which past API service/tool outputs are stored as named R objects of any type, used to resolve chained API calls and to inform the AI prompt via \code{past_outputs}. Defaults to \code{NULL} (creates a new environment).
+    #' @param tool_docs (`logical(1)`)\cr
+    #'   Whether to interpolate rendered tool documentation into the prompt via \code{\link{build_tool_docs}}. Defaults to \code{FALSE}.
+    #' @param include_examples (`logical(1)`)\cr
+    #'   Whether retained tool documentation includes the \code{\\examples} section. Only relevant when \code{tool_docs = TRUE}. Defaults to \code{FALSE}.
     #' @param prompt_template (`character(1)`)\cr
     #'   Prompt template for the AI, for parameter extraction and user interaction. Defaults to the ChatRBox conversational template.
     #' @param summary_list (`list()`)\cr
@@ -84,6 +88,8 @@ ChatRBox <- R6::R6Class(
     tools_env = NULL,
     data_env = NULL,
     object_env = NULL,
+    tool_docs = FALSE,
+    include_examples = FALSE,
     prompt_template = ChatRBox::load_prompt_template(),
     summary_list = list(),
     final_summary_prompt = "",
@@ -104,6 +110,8 @@ ChatRBox <- R6::R6Class(
         tools_env = tools_env,
         data_env = data_env,
         object_env = object_env,
+        tool_docs = tool_docs,
+        include_examples = include_examples,
         prompt_template = prompt_template,
         summary_list = summary_list,
         final_summary_prompt = final_summary_prompt,
@@ -285,6 +293,8 @@ ChatRBox <- R6::R6Class(
 #' @param tools_env Environment. Tool functions are added to this environment. Defaults to current \code{S7} object tools environment.
 #' @param data_env Environment. Data frames are added to this environment. Defaults to current \code{S7} object data environment.
 #' @param object_env Environment. Past API service/tool outputs are stored in this environment as named R objects of any type, used to resolve chained API calls and to inform the AI prompt via \code{past_outputs}. Defaults to current \code{S7} object object environment.
+#' @param tool_docs Logical. Whether to interpolate rendered tool documentation into the prompt via \code{\link{build_tool_docs}}. Defaults to \code{S7} object current state to preserve original user intent during update.
+#' @param include_examples Logical. Whether retained tool documentation includes the \code{\\examples} section. Only relevant when \code{tool_docs = TRUE}. Defaults to \code{FALSE}.
 #' @param prompt_template Character. General AI prompt for outputting parameter key-value pairs for available API services/tools. Defaults to current \code{S7} object prompt, likely interpolating function paths and arguments.
 #' @param summary_list List. Optional named list of instructions for AI-enabled summaries, assigned to specific services via name matching. Prompting may be provided via character strings or a Markdown file. Defaults to empty list.
 #' @param final_summary_prompt Character. Single synthesis instruction steering \code{summarize = "final"}, as opposed to the per-service \code{summary_list} used by \code{summarize = TRUE}. Supplied as a literal string or the path to a Markdown file, resolved identically to \code{prompt_template}. Updated additively; defaults to the current object value.
@@ -312,6 +322,8 @@ ChatRBox_update <- function(object,
                             tools_env = object$chat_object@tools_env,
                             data_env = object$chat_object@data_env,
                             object_env = object$chat_object@object_env,
+                            tool_docs = isTRUE(nzchar(object$chat_object@tool_docs)),
+                            include_examples = FALSE,
                             prompt_template = object$chat_object@prompt_template,
                             summary_list = list(),
                             final_summary_prompt = object$chat_object@final_summary_prompt,
@@ -331,6 +343,8 @@ ChatRBox_update <- function(object,
                                                 tools_env = tools_env,
                                                 data_env = data_env,
                                                 object_env = object_env,
+                                                tool_docs = tool_docs,
+                                                include_examples = include_examples,
                                                 prompt_template = prompt_template,
                                                 summary_list = summary_list,
                                                 final_summary_prompt = final_summary_prompt,

@@ -1,7 +1,28 @@
-# Supported code block languages for extraction/removal
-# Extend this vector to support additional structured output formats
-# See CONTRIBUTING.md ('Adding a New Structured Output Language')
-.SUPPORTED_CODE_LANGUAGES <- c("json", "display")
+# Supported code block languages for extraction/removal.
+# Extend this vector to support additional structured output formats.
+# See CONTRIBUTING.md ('Adding a New Structured Output Language').
+.SUPPORTED_CODE_LANGUAGES <- c("json", "display", "yaml", "yml", "tsv", "csv", "md")
+
+#' @noRd
+.code_block <- function(string = NULL,
+                        language = NULL,
+                        action = c("extract", "remove")) {
+  
+  if (any_is_empty(string)) stop("string is empty")
+  if (any_is_empty(language)) stop("language is empty")
+  
+  action <- match.arg(action)
+  
+  if (identical(action, "extract")) {
+    stringr::str_extract(
+      string,
+      glue::glue("(?s)(?<=```{language}\n)(.+?)(?=\n?```)"))
+  } else {
+    stringr::str_remove_all(
+      string,
+      glue::glue("(?s)```{language}(?=\\s)\\s?.+?```"))
+  }
+}
 
 #' Redacts Sensitive Values from an Argument List for Safe Display
 #'
@@ -53,7 +74,7 @@ redact_sensitive <- function(x,
 #' This function extracts the first code block of a specified language from a Markdown-formatted string. The extracted block excludes language tags and code fences. 
 #'
 #' @param string Character. The input string containing Markdown code block(s). Required.
-#' @param language Character. The language tag of the code block to extract. Defaults to "json".
+#' @param language Character. The language tag of the code block. One of the supported tags in \code{.SUPPORTED_CODE_LANGUAGES} (\code{"json"}, \code{"display"}, \code{"yaml"}, \code{"yml"}, \code{"tsv"}, \code{"csv"}, \code{"md"}). This may be extended by adding to the vector assignment. See CONTRIBUTING.md for further detail. Defaults to "json".
 #' @return The contents of the first extracted code block.  
 #' @details
 #' This function is used in \code{\link{llm_api_result}} to parse the LLM response. The ChatRBox AI response given the default prompt should contain both a JSON object and text output, if an API service/tool has been used. The JSON object is used to populate the chosen API service/tool function with parameters from the input question, whereas the explanation is for user interaction. Hence, these are employed differently in downstream workflows. 
@@ -64,7 +85,7 @@ redact_sensitive <- function(x,
 #' @importFrom glue glue
 #' @example man/examples/examples_parse.R
 #' @export
-code_extract <- function(string = NULL, 
+code_extract <- function(string = NULL,
                          language = "json") {
   
   if (any_is_empty(string)) stop("string is empty")
@@ -73,7 +94,7 @@ code_extract <- function(string = NULL,
   
   language <- match.arg(arg = language, choices = .SUPPORTED_CODE_LANGUAGES)
   
-  stringr::str_extract(string, glue::glue("(?s)(?<=```{language}\n)(.+?)(?=\n?```)"))
+  .code_block(string = string, language = language, action = "extract")
 }
 
 #' Removes Code Block from Markdown String
@@ -81,7 +102,7 @@ code_extract <- function(string = NULL,
 #' This function removes all code blocks of a specified language from a Markdown-formatted string. The string is returned excluding code blocks and code fences. 
 #'
 #' @param string Character. The input string containing Markdown code block(s). Required.
-#' @param language Character. The language tag of the code block to remove. Defaults to "json".
+#' @param language Character. The language tag of the code block. One of the supported tags in \code{.SUPPORTED_CODE_LANGUAGES} (\code{"json"}, \code{"display"}, \code{"yaml"}, \code{"yml"}, \code{"tsv"}, \code{"csv"}, \code{"md"}). This may be extended by adding to the vector assignment. See CONTRIBUTING.md for further detail. Defaults to "json".
 #' @return A character string with specified code blocks and fences removed.  
 #' @details
 #' This function is used in \code{\link{llm_api_result}} to parse text and code components from the LLM response. The ChatRBox AI response given the default prompt should contain both a JSON object and plain text output, if an API service/tool has been used. The JSON object is used to populate the chosen API service/tool function with parameters from the input question, whereas the explanation is for user interaction. Hence, these are employed differently in downstream workflows. 
@@ -92,7 +113,7 @@ code_extract <- function(string = NULL,
 #' @importFrom glue glue
 #' @example man/examples/examples_parse.R
 #' @export
-code_remove <- function(string = NULL, 
+code_remove <- function(string = NULL,
                         language = "json") {
   
   if (any_is_empty(string)) stop("string is empty")
@@ -101,7 +122,7 @@ code_remove <- function(string = NULL,
   
   language <- match.arg(arg = language, choices = .SUPPORTED_CODE_LANGUAGES)
   
-  stringr::str_remove_all(string, glue::glue("(?s)```{language}\\n?.+?```"))
+  .code_block(string = string, language = language, action = "remove")
 }
 
 #' Returns Second Value from JSON Object 

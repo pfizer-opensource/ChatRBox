@@ -84,6 +84,8 @@ Initializes a new ChatRBox session using the provided parameters.
   tools_env = NULL,
   data_env = NULL,
   object_env = NULL,
+  tool_docs = FALSE,
+  include_examples = FALSE,
   prompt_template = ChatRBox::load_prompt_template(),
   summary_list = list(),
   final_summary_prompt = "",
@@ -123,6 +125,12 @@ Environment to which data frames are added. Defaults to \code{NULL} (creates a n
 
 \item{\code{object_env}}{(`environment()`)\cr
 Environment in which past API service/tool outputs are stored as named R objects of any type, used to resolve chained API calls and to inform the AI prompt via \code{past_outputs}. Defaults to \code{NULL} (creates a new environment).}
+
+\item{\code{tool_docs}}{(`logical(1)`)\cr
+Whether to interpolate rendered tool documentation into the prompt via \code{\link{build_tool_docs}}. Defaults to \code{FALSE}.}
+
+\item{\code{include_examples}}{(`logical(1)`)\cr
+Whether retained tool documentation includes the \code{\\examples} section. Only relevant when \code{tool_docs = TRUE}. Defaults to \code{FALSE}.}
 
 \item{\code{prompt_template}}{(`character(1)`)\cr
 Prompt template for the AI, for parameter extraction and user interaction. Defaults to the ChatRBox conversational template.}
